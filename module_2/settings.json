@@ -1,0 +1,42 @@
+{
+  "mcpServers": {
+    "slack": {
+      "command": "node",
+      "args": [
+        "/usr/local/lib/node_modules/@modelcontextprotocol/server-slack/dist/index.js"
+      ],
+      "env": {
+        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+        "SLACK_TEAM_ID": "${SLACK_TEAM_ID}"
+      }
+    },
+    "gmail": {
+      "command": "node",
+      "args": [
+        "/usr/local/lib/node_modules/@gongrzhe/server-gmail-autoauth-mcp/build/index.js"
+      ]
+    }
+  },
+  "skills": [
+    {
+      "name": "send-slack-message",
+      "description": "Send a message to a Slack channel via the Slack MCP server.",
+      "prompt": "Use the Slack MCP server to send the following message to the specified channel. Ask the user for the channel name and message if not provided."
+    },
+    {
+      "name": "check-gmail",
+      "description": "Check recent Gmail messages and summarize them.",
+      "prompt": "Use the Gmail MCP server to retrieve the most recent unread emails and provide a concise summary of each, including sender, subject, and key points."
+    },
+    {
+      "name": "send-email",
+      "description": "Draft and send an email via Gmail using the Gmail MCP server.",
+      "prompt": "Use the Gmail MCP server to compose and send an email. Ask the user for the recipient, subject, and body if not already provided."
+    },
+    {
+      "name": "summarize-session",
+      "description": "Summarize the current work session.",
+      "prompt": "Please provide a concise bullet-point summary of what we have worked on in this session, including any decisions made, code written, and next steps."
+    }
+  ]
+}
