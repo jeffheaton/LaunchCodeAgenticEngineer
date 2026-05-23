@@ -190,6 +190,23 @@ Then rebuild the image so the file is copied into `/root/.claude/skills/`:
 docker build -t agentic_engineer_2 .
 ```
 
+**Adding a skill at runtime (no rebuild required):**
+
+You can also add a skill directly inside a running container without rebuilding the image. The full path inside the container is:
+
+```
+/root/.claude/skills/<skill-name>/SKILL.md
+```
+
+For example:
+
+```bash
+mkdir -p /root/.claude/skills/my-skill
+nano /root/.claude/skills/my-skill/SKILL.md
+```
+
+Note: since the container is run with `--rm`, any skills added this way will be lost when the container exits. To persist them, add them to the `skills/` directory in this repo and rebuild.
+
 ---
 
 ### Method 2 — `settings.json` inline prompt (suitable for simple skills)
