@@ -19,6 +19,11 @@
       "name": "summarize-session",
       "description": "Summarize the current work session.",
       "prompt": "Please provide a concise bullet-point summary of what we have worked on in this session, including any decisions made, code written, and next steps."
+    },
+    {
+      "name": "rebuild-and-deploy",
+      "description": "Rebuild the Docker image and push it to DockerHub.",
+      "prompt": "Ask the user for the DockerHub repository (default: heatonresearch/agentic_engineer_2) and an optional version tag. Confirm the commands with the user, then run docker build and docker push. Stop and report any errors."
     }
   ]
 }

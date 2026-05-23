@@ -138,7 +138,7 @@ docker run -it --rm -p 8501:8501 \
 
 ## Skills
 
-Skills are custom slash commands available inside Claude Code. They are defined in `settings.json` (copied to `/root/.claude/settings.json` during the image build) and invoked by typing `/skill-name` in a Claude Code session.
+Skills are custom slash commands invoked by typing `/skill-name` inside a Claude Code session. Claude Code supports two ways to define skills, and this image uses both.
 
 ### Pre-installed Skills
 
@@ -148,10 +148,53 @@ Skills are custom slash commands available inside Claude Code. They are defined 
 | `/check-gmail` | Retrieve and summarize recent unread Gmail messages |
 | `/send-email` | Draft and send an email via the Gmail MCP server |
 | `/summarize-session` | Generate a bullet-point summary of the current work session |
+| `/rebuild-and-deploy` | Rebuild the Docker image and push it to DockerHub |
 
-### Adding Your Own Skills
+---
 
-Edit `settings.json` before building the image, or modify `/root/.claude/settings.json` inside a running container:
+### Method 1 — SKILL.md files (recommended for non-trivial skills)
+
+Each skill lives in its own Markdown file at `.claude/skills/<skill-name>/SKILL.md`. Inside the container these are placed at `/root/.claude/skills/`.
+
+```
+skills/
+  send-slack-message/SKILL.md
+  check-gmail/SKILL.md
+  send-email/SKILL.md
+  summarize-session/SKILL.md
+```
+
+**When to use this method:**
+- The skill prompt is more than a sentence or two.
+- The skill has multiple steps, conditional logic, or examples that benefit from formatting.
+- You want each skill in its own file for easier editing and version control.
+- You are building skills that will be shared or maintained over time.
+
+To add a skill, create a new directory and SKILL.md file:
+
+```bash
+mkdir -p skills/my-skill
+cat > skills/my-skill/SKILL.md << 'EOF'
+Description of what this skill does.
+
+Steps:
+1. First step Claude should take.
+2. Second step.
+3. Confirm result to the user.
+EOF
+```
+
+Then rebuild the image so the file is copied into `/root/.claude/skills/`:
+
+```bash
+docker build -t agentic_engineer_2 .
+```
+
+---
+
+### Method 2 — `settings.json` inline prompt (suitable for simple skills)
+
+Skills can also be defined as entries in the `skills` array in `settings.json` (copied to `/root/.claude/settings.json` at build time):
 
 ```json
 {
@@ -165,11 +208,29 @@ Edit `settings.json` before building the image, or modify `/root/.claude/setting
 }
 ```
 
-Rebuild the image after editing `settings.json` so the changes are baked in:
+**When to use this method:**
+- The skill is a single short instruction that fits comfortably on one line.
+- You want to keep everything in one configuration file.
+- The skill is unlikely to grow in complexity over time.
+
+Edit `settings.json` (or `settings.template.json` if environment variable substitution is needed), then rebuild:
 
 ```bash
 docker build -t agentic_engineer_2 .
 ```
+
+---
+
+### Which method should I use?
+
+| | SKILL.md file | `settings.json` inline |
+|---|---|---|
+| Best for | Multi-step, formatted prompts | Short, simple one-liners |
+| Version control | One file per skill | All skills in one file |
+| Editing | Easy to read and maintain | Gets cluttered as prompts grow |
+| Supports Markdown formatting | Yes | No |
+
+When in doubt, prefer SKILL.md files. They scale better and are easier to maintain as your prompt evolves.
 
 ---
 
