@@ -30,6 +30,21 @@ docker run -it --rm -p 8501:8501 -p 8502:8502 \
   heatonresearch/agentic_engineer_2:latest
 ```
 
+Full setup with Slack and Gmail (reads credentials from your shell environment):
+
+```bash
+docker run -it --rm \
+  -p 8501:8501 -p 8502:8502 \
+  -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
+  -e SLACK_BOT_TOKEN=$SLACK_BOT_TOKEN \
+  -e SLACK_TEAM_ID=$SLACK_TEAM_ID \
+  -v "$PWD":/workspace \
+  -v "$HOME/.gmail-mcp":/root/.gmail-mcp \
+  heatonresearch/agentic_engineer_2:latest
+```
+
+Place `credentials.json` (from Google Cloud Console) in `$PWD` before running. The Gmail MCP will trigger OAuth on first use and persist the token in `~/.gmail-mcp/`.
+
 ## Build
 
 ```bash
