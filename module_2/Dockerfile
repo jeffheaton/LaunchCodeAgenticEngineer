@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     procps \
     nodejs \
     npm \
+    gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -34,10 +35,13 @@ RUN curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
     && apt-get update && apt-get install -y ngrok \
     && rm -rf /var/lib/apt/lists/*
 
-# Set up Claude Code configuration directory and copy default settings
-# (MCP server configs + skills; users can override by mounting their own settings.json)
+# Set up Claude Code configuration directory and copy settings template
 RUN mkdir -p /root/.claude
-COPY settings.json /root/.claude/settings.json
+COPY settings.template.json /root/.claude/settings.template.json
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Student shell quality-of-life improvements
 RUN echo 'export PS1="ai-course:\\w# "' >> /root/.bashrc && \
@@ -47,4 +51,5 @@ RUN echo 'export PS1="ai-course:\\w# "' >> /root/.bashrc && \
     echo 'alias python="python3"' >> /root/.bashrc && \
     echo 'alias pip="pip3"' >> /root/.bashrc
 
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["/bin/bash"]
