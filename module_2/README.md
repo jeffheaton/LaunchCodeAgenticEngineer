@@ -100,10 +100,10 @@ MCP (Model Context Protocol) servers extend Claude Code so that prompts can take
 
 **Required environment variables** (pass with `-e` at `docker run`):
 
-| Variable | Description |
-|---|---|
-| `SLACK_BOT_TOKEN` | Bot User OAuth Token from your Slack App (`xoxb-…`) |
-| `SLACK_TEAM_ID` | Your Slack workspace ID (found in workspace settings) |
+| Variable          | Description                                           |
+| ----------------- | ----------------------------------------------------- |
+| `SLACK_BOT_TOKEN` | Bot User OAuth Token from your Slack App (`xoxb-…`)   |
+| `SLACK_TEAM_ID`   | Your Slack workspace ID (found in workspace settings) |
 
 **Getting a Slack Bot Token:**
 
@@ -143,17 +143,17 @@ Skills are custom slash commands invoked by typing `/skill-name` inside a Claude
 
 ### Pre-installed Skills
 
-| Skill | Description |
-|---|---|
-| `/send-slack-message` | Send a message to a Slack channel via the Slack MCP server |
-| `/check-gmail` | Retrieve and summarize recent unread Gmail messages |
-| `/send-email` | Draft and send an email via the Gmail MCP server |
-| `/summarize-session` | Generate a bullet-point summary of the current work session |
-| `/rebuild-and-deploy` | Rebuild the Docker image and push it to DockerHub |
+| Skill                 | Description                                                 |
+| --------------------- | ----------------------------------------------------------- |
+| `/send-slack-message` | Send a message to a Slack channel via the Slack MCP server  |
+| `/check-gmail`        | Retrieve and summarize recent unread Gmail messages         |
+| `/send-email`         | Draft and send an email via the Gmail MCP server            |
+| `/summarize-session`  | Generate a bullet-point summary of the current work session |
+| `/rebuild-and-deploy` | Rebuild the Docker image and push it to DockerHub           |
 
 ---
 
-### Method 1 — SKILL.md files (recommended for non-trivial skills)
+### SKILL.md files
 
 Each skill lives in its own Markdown file at `.claude/skills/<skill-name>/SKILL.md`. Inside the container these are placed at `/root/.claude/skills/`.
 
@@ -166,6 +166,7 @@ skills/
 ```
 
 **When to use this method:**
+
 - The skill prompt is more than a sentence or two.
 - The skill has multiple steps, conditional logic, or examples that benefit from formatting.
 - You want each skill in its own file for easier editing and version control.
@@ -210,50 +211,6 @@ Note: since the container is run with `--rm`, any skills added this way will be 
 
 ---
 
-### Method 2 — `settings.json` inline prompt (suitable for simple skills)
-
-Skills can also be defined as entries in the `skills` array in `settings.json` (copied to `/root/.claude/settings.json` at build time):
-
-```json
-{
-  "skills": [
-    {
-      "name": "my-skill",
-      "description": "What this skill does",
-      "prompt": "The full prompt Claude will execute when /my-skill is invoked."
-    }
-  ]
-}
-```
-
-**When to use this method:**
-- The skill is a single short instruction that fits comfortably on one line.
-- You want to keep everything in one configuration file.
-- The skill is unlikely to grow in complexity over time.
-
-Edit `settings.json` (or `settings.template.json` if environment variable substitution is needed), then rebuild:
-
-```bash
-docker build -t agentic_engineer_2 .
-```
-
----
-
-### Which method should I use?
-
-| | SKILL.md file | `settings.json` inline |
-|---|---|---|
-| Best for | Multi-step, formatted prompts | Short, simple one-liners |
-| Version control | One file per skill | All skills in one file |
-| Editing | Easy to read and maintain | Gets cluttered as prompts grow |
-| Supports Markdown formatting | Yes | No |
-
-When in doubt, prefer SKILL.md files. They scale better and are easier to maintain as your prompt evolves.
-
----
-
----
-
 ## Agents
 
 Agents are autonomous sub-agents that Claude Code can spin up to handle specialized tasks. Unlike skills (which are slash commands you invoke), agents are specialists that Claude Code invokes automatically when the task matches, or that you can request explicitly in a prompt.
@@ -262,8 +219,8 @@ Agents are defined as Markdown files with YAML frontmatter and stored in `.claud
 
 ### Pre-installed Agents
 
-| Agent | Trigger description |
-|---|---|
+| Agent           | Trigger description                                                                           |
+| --------------- | --------------------------------------------------------------------------------------------- |
 | `code-reviewer` | Reviews recent git changes for quality, security, and maintainability without modifying files |
 
 ### Running an Agent
@@ -286,6 +243,7 @@ When invoked, `code-reviewer`:
 4. Provides a concrete fix example for every Critical and Warning item.
 
 It checks for:
+
 - Code clarity and naming conventions
 - Duplicated logic
 - Error handling and input validation
@@ -329,12 +287,12 @@ Note: agents added this way are lost when the container exits (since it runs wit
 
 ### Agent File Format
 
-| Field | Description |
-|---|---|
-| `name` | Identifier used to reference the agent |
-| `description` | Tells Claude Code when to invoke the agent (be specific) |
-| `tools` | Comma-separated list of tools the agent may use |
-| `model` | Model to use (`inherit` uses the same model as the parent session) |
+| Field            | Description                                                         |
+| ---------------- | ------------------------------------------------------------------- |
+| `name`           | Identifier used to reference the agent                              |
+| `description`    | Tells Claude Code when to invoke the agent (be specific)            |
+| `tools`          | Comma-separated list of tools the agent may use                     |
+| `model`          | Model to use (`inherit` uses the same model as the parent session)  |
 | `permissionMode` | `default` respects normal permission prompts; `allowAll` skips them |
 
 ---

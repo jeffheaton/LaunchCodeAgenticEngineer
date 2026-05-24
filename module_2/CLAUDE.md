@@ -66,6 +66,7 @@ Pre-configured sub-agents available inside Claude Code sessions. Agents are auto
 | Agent | Description |
 |---|---|
 | `code-reviewer` | Reviews recent git changes for quality, security, and maintainability |
+| `email-summarize` | Checks new Gmail messages and posts sender + 2-line summary to #test Slack channel |
 
 Agents are defined as Markdown files with YAML frontmatter in `/root/.claude/agents/` inside the container. Source files live in the `agents/` directory of this repo and are copied in at build time.
 
