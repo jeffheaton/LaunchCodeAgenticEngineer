@@ -12,7 +12,9 @@ ENV PYTHONUNBUFFERED=1 \
     # These dirs are created below; if /workspace is bind-mounted the host
     # directory will shadow them, but HF will re-create subdirs as needed.
     HF_HOME=/workspace/.cache/huggingface \
-    SENTENCE_TRANSFORMERS_HOME=/workspace/.cache/sentence-transformers
+    SENTENCE_TRANSFORMERS_HOME=/workspace/.cache/sentence-transformers \
+    # Auto-confirm npx prompts (suppresses "Ok to proceed?" when running tools like MCP Inspector).
+    NPM_CONFIG_YES=true
 
 # --- OS packages ---
 # Core tools (curl, git, etc.) plus Module 4.2 diagnostics/build dependencies:
@@ -66,6 +68,7 @@ import rank_bm25; \
 print('All Module 4.2 imports OK')"
 
 # --- Node/npm agent tooling ---
+# NPM_CONFIG_FORCE=true: makes npx resolve globally-installed packages even
 # Claude Code is the primary agent harness for this course.
 RUN npm install -g @anthropic-ai/claude-code
 

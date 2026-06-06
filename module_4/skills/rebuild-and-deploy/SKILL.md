@@ -8,13 +8,13 @@ Show the user the exact commands that will be run and ask for confirmation befor
 
 Steps:
 1. Confirm the working directory contains a `Dockerfile`. If not, ask the user to navigate to the correct directory (e.g. `module_4/`).
-2. Run the build, tagging as both `latest` and the version tag if provided:
+2. Run the build. Always include the short local tag `agentic_engineer_4` (no repo prefix) so that `run-agent.sh` picks up the new image immediately. Also tag as `latest` and the version tag if provided:
    ```
-   docker build -t <repo>:latest -t <repo>:<version> .
+   docker build -t <repo>:latest -t <repo>:<version> -t agentic_engineer_4 .
    ```
    If no version tag, just:
    ```
-   docker build -t <repo>:latest .
+   docker build -t <repo>:latest -t agentic_engineer_4 .
    ```
 3. If the build fails, stop and report the error. Do not attempt to push.
 4. Push each tag separately:
