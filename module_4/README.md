@@ -297,6 +297,49 @@ Note: agents added this way are lost when the container exits (since it runs wit
 
 ---
 
+## Running Subagent Containers
+
+`scripts/run-agent.sh` (macOS/Linux) and `scripts/run-agent.ps1` (Windows) launch a subagent container enforcing the governance policy for the given role. Pass the role name as the first argument; any additional arguments are forwarded to the container.
+
+**macOS / Linux:**
+
+```bash
+# Read-only workspace, no memory mount (reviewer, tester, project-manager)
+./scripts/run-agent.sh reviewer
+
+# Read-write workspace, memory mounted (implementer, orchestrator)
+./scripts/run-agent.sh implementer
+
+# Pass a command to run inside the container
+./scripts/run-agent.sh tester python3 -m pytest eval/ -v
+```
+
+**Windows (PowerShell):**
+
+```powershell
+# Read-only workspace, no memory mount
+.\scripts\run-agent.ps1 reviewer
+
+# Read-write workspace, memory mounted
+.\scripts\run-agent.ps1 implementer
+
+# Pass a command to run inside the container
+.\scripts\run-agent.ps1 tester python3 -m pytest eval/ -v
+```
+
+Override the default image (`launchcode-agentic:module4`) with the `AGENT_IMAGE` environment variable:
+
+```bash
+AGENT_IMAGE=heatonresearch/agentic_engineer_4:latest ./scripts/run-agent.sh implementer
+```
+
+```powershell
+$env:AGENT_IMAGE = 'heatonresearch/agentic_engineer_4:latest'
+.\scripts\run-agent.ps1 implementer
+```
+
+---
+
 ## Gmail API Credentials (Python SDK)
 
 In addition to the MCP server, the Python `google-api-python-client` library is available for direct API use in your code.
@@ -382,6 +425,9 @@ docker run --rm -v "$PWD":/workspace agentic_engineer_4 \
 
 - `eval/test_policy.py` reads `.skills/*.md` for skill-scope enforcement. The `.skills/` directory is currently empty — add per-role skill scope files there as you build out the governance lesson content.
 - Tests that check directory structure (`.agents`, `.skills`, `docs/adr`, etc.) expect those directories to exist in the bind-mounted workspace. They are created automatically when the container runs without a bind-mount.
+- `scripts/run-reviewer.py` is a safe sample that does **not** call a live LLM. It writes a deterministic advisory review so the CI workflow can be exercised without API spend.
+- Runtime logs belong under `logs/` and are gitignored.
+- Configure branch protection so `Policy Test Suite`, `Evaluation Harness`, and `Pipeline Integrity Check` are required status checks before merge.
 
 ---
 
@@ -448,53 +494,3 @@ docker run -it --rm -p 8501:8501 -p 8502:8502 \
   -v "$PWD":/workspace \
   heatonresearch/agentic_engineer_4:latest
 ```
-
-# Govern Your Agents and Right-Size Each Step — Sample Repository
-
-This repository is a ready-to-upload GitHub sample extracted from the three lesson drafts:
-
-1. **Author and Enforce Per-Role Governance Policies**
-2. **Add Eval-Gated Agentic Steps to CI/CD**
-3. **Convert Stable Agentic Steps to Deterministic Code**
-
-It includes the source-controlled artifacts the lessons call for, with runnable sample implementations where the drafts mention a file but do not provide complete code.
-
-## What is included
-
-- Per-role governance policy and test suite.
-- Per-role container startup script.
-- MCP storage/retrieval allow-list samples and sample servers.
-- Skill activation-scope files.
-- CI workflow with policy gate, eval gate, advisory review, audit-trail job, and pipeline integrity check.
-- Deterministic handoff validator and unit tests.
-- ADR examples and a living step-classification document.
-
-## Quick start
-
-Build the image and run the full test suite inside the container:
-
-```bash
-docker build -t agentic_engineer_4 .
-docker run --rm -v "$PWD":/workspace agentic_engineer_4 python3 -m pytest eval/ -v
-```
-
-Run the deterministic scripts manually:
-
-```bash
-docker run --rm -v "$PWD":/workspace agentic_engineer_4 \
-  python3 scripts/validate_handoff_deterministic.py \
-    --input examples/handoff.json \
-    --schema schemas/handoff.json \
-    --output /tmp/handoff-result.json
-
-docker run --rm -v "$PWD":/workspace agentic_engineer_4 \
-  python3 scripts/check-pipeline-integrity.py
-```
-
-See the [Running Unit Tests](#running-unit-tests) section for the full breakdown of individual test suites.
-
-## Notes
-
-- `scripts/run-reviewer.py` is a safe sample that does **not** call a live LLM. It writes a deterministic advisory review so the CI workflow can be exercised without API spend.
-- Runtime logs belong under `logs/` and are ignored.
-- Real repositories should configure branch protection/rulesets so `Policy Test Suite`, `Evaluation Harness`, and `Pipeline Integrity Check` are required before merge.

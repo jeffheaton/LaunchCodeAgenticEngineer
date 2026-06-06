@@ -56,6 +56,7 @@ Pre-configured skills (invoked with `/skill-name` in Claude Code):
 | `/check-gmail` | Summarize recent unread Gmail messages |
 | `/send-email` | Draft and send an email via Gmail |
 | `/summarize-session` | Bullet-point summary of the current session |
+| `/rebuild-and-deploy` | Rebuild the Docker image and push it to DockerHub |
 
 Skills are defined in `settings.json` which is copied to `/root/.claude/settings.json` during image build.
 
