@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Any
 
 from fastmcp import FastMCP
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 
 DB_PATH = os.getenv("STORAGE_DB_PATH", "/memory/storage.db")
 AUDIT_PATH = os.getenv("STORAGE_AUDIT_PATH", "/memory/storage-audit.log")
@@ -251,4 +253,12 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8001)
     parser.add_argument("--host", default="127.0.0.1")
     args = parser.parse_args()
-    mcp.run(transport="http", host=args.host, port=args.port)
+
+    import uvicorn
+    app = mcp.http_app(
+        stateless_http=True,
+        middleware=[
+            Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+        ],
+    )
+    uvicorn.run(app, host=args.host, port=args.port)

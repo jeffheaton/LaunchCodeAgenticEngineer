@@ -12,7 +12,9 @@ ENV PYTHONUNBUFFERED=1 \
     # These dirs are created below; if /workspace is bind-mounted the host
     # directory will shadow them, but HF will re-create subdirs as needed.
     HF_HOME=/workspace/.cache/huggingface \
-    SENTENCE_TRANSFORMERS_HOME=/workspace/.cache/sentence-transformers
+    SENTENCE_TRANSFORMERS_HOME=/workspace/.cache/sentence-transformers \
+    HOST=0.0.0.0 \
+    CLIENT_PORT=8502
 
 # --- OS packages ---
 # Core tools (curl, git, etc.) plus Module 3.2 diagnostics/build dependencies:
@@ -63,6 +65,7 @@ import sklearn; \
 import pydantic; \
 import httpx; \
 import rank_bm25; \
+import sqlite_vec; \
 print('All Module 3.2 imports OK')"
 
 # --- Node/npm agent tooling ---
@@ -104,11 +107,16 @@ COPY agents/ /root/.claude/agents/
 RUN mkdir -p \
     /workspace/mcp-servers/storage \
     /workspace/mcp-servers/retrieval \
-    /workspace/.memory/reference \
     /workspace/.cache/huggingface \
     /workspace/.cache/sentence-transformers \
     /workspace/docs \
-    /workspace/tests
+    /workspace/tests \
+    /memory/reference
+
+# Bake the reference corpus into the image so the retrieval server works
+# without a bind-mount. Mounting -v "$PWD/.memory":/memory at runtime
+# will shadow this with a live corpus for development use.
+COPY .memory/reference/ /memory/reference/
 
 # --- Entrypoint ---
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

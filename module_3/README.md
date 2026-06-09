@@ -14,21 +14,29 @@ Build and run locally:
 ```bash
 cd module_3
 docker build -t agentic_engineer_3 .
-docker run -it --rm -p 8501:8501 -p 8502:8502 \
+docker run -it --rm \
+  -p 8501:8501 -p 8502:8502 \
+  -p 6274:6274 -p 3000:3000 \
+  -p 8001:8001 -p 8002:8002 \
   -e SLACK_BOT_TOKEN=xoxb-your-token \
   -e SLACK_TEAM_ID=T0123456 \
   -v "$PWD":/workspace \
+  -v "$PWD/.memory":/memory \
   agentic_engineer_3
 ```
 
 Or pull the pre-built image from DockerHub:
 
 ```bash
-docker run -it --rm -p 8501:8501 -p 8502:8502 \
+docker run -it --rm \
+  -p 8501:8501 -p 8502:8502 \
+  -p 6274:6274 -p 3000:3000 \
+  -p 8001:8001 -p 8002:8002 \
   -e SLACK_BOT_TOKEN=xoxb-your-token \
   -e SLACK_TEAM_ID=T0123456 \
   -v "$PWD":/workspace \
-  heatonresearch/agentic_engineer_2:latest
+  -v "$PWD/.memory":/memory \
+  heatonresearch/agentic_engineer_3:latest
 ```
 
 Full setup with Slack and Gmail (reads credentials from your shell environment):
@@ -36,12 +44,15 @@ Full setup with Slack and Gmail (reads credentials from your shell environment):
 ```bash
 docker run -it --rm \
   -p 8501:8501 -p 8502:8502 \
+  -p 6274:6274 -p 3000:3000 \
+  -p 8001:8001 -p 8002:8002 \
   -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
   -e SLACK_BOT_TOKEN=$SLACK_BOT_TOKEN \
   -e SLACK_TEAM_ID=$SLACK_TEAM_ID \
   -v "$PWD":/workspace \
+  -v "$PWD/.memory":/memory \
   -v "$HOME/.gmail-mcp":/root/.gmail-mcp \
-  heatonresearch/agentic_engineer_2:latest
+  heatonresearch/agentic_engineer_3:latest
 ```
 
 Place `credentials.json` (from Google Cloud Console) in `$PWD` before running. The Gmail MCP will trigger OAuth on first use and persist the token in `~/.gmail-mcp/`.
@@ -49,13 +60,13 @@ Place `credentials.json` (from Google Cloud Console) in `$PWD` before running. T
 ## Build
 
 ```bash
-docker build -t agentic_engineer_2 .
+docker build -t agentic_engineer_3 .
 ```
 
 Force a complete rebuild (no cached layers):
 
 ```bash
-docker build --no-cache -t agentic_engineer_2 .
+docker build --no-cache -t agentic_engineer_3 .
 ```
 
 ## Run
@@ -64,26 +75,61 @@ docker build --no-cache -t agentic_engineer_2 .
 
 ```bash
 # macOS / Linux
-docker run -it --rm -p 8501:8501 -p 8502:8502 \
+docker run -it --rm \
+  -p 8501:8501 -p 8502:8502 \
+  -p 6274:6274 -p 3000:3000 \
+  -p 8001:8001 -p 8002:8002 \
   -e SLACK_BOT_TOKEN=xoxb-your-token \
   -e SLACK_TEAM_ID=T0123456 \
   -v "$PWD":/workspace \
-  agentic_engineer_2
+  -v "$PWD/.memory":/memory \
+  agentic_engineer_3
 
 # Windows (PowerShell)
-docker run -it --rm -p 8501:8501 -p 8502:8502 `
+docker run -it --rm `
+  -p 8501:8501 -p 8502:8502 `
+  -p 6274:6274 -p 3000:3000 `
+  -p 8001:8001 -p 8002:8002 `
   -e SLACK_BOT_TOKEN=xoxb-your-token `
   -e SLACK_TEAM_ID=T0123456 `
   -v "${PWD}:/workspace" `
-  agentic_engineer_2
+  -v "${PWD}/.memory":/memory `
+  agentic_engineer_3
 ```
 
 Files created or edited inside `/workspace` are saved to your local folder and persist after the container exits.
 
+**Port reference:**
+
+| Port | Purpose |
+| ---- | ------- |
+| `8501` / `8502` | Streamlit apps |
+| `6274` | MCP Inspector web UI |
+| `3000` | MCP Inspector proxy server |
+| `8001` | MCP storage server (connect Inspector directly without proxy: transport = Streamable HTTP, URL = `http://localhost:8001/mcp`) |
+| `8002` | MCP retrieval server (transport = Streamable HTTP, URL = `http://localhost:8002/mcp`) |
+
+### Opening a second shell in a running container
+
+To open an additional terminal into an already-running container (useful for inspecting logs, running commands, or testing MCP servers while the main session is active):
+
+```bash
+# If you used the default image name
+docker exec -it $(docker ps -q -f ancestor=agentic_engineer_3) /bin/bash
+
+# Or look up the container ID/name first, then connect
+docker ps
+docker exec -it <container_id_or_name> /bin/bash
+```
+
 ### Without a local workspace
 
 ```bash
-docker run -it --rm -p 8501:8501 agentic_engineer_2
+docker run -it --rm \
+  -p 8501:8501 \
+  -p 6274:6274 -p 3000:3000 \
+  -p 8001:8001 -p 8002:8002 \
+  agentic_engineer_3
 ```
 
 Any files created inside the container will be lost when it exits.
@@ -127,10 +173,14 @@ MCP (Model Context Protocol) servers extend Claude Code so that prompts can take
 5. On first use, the MCP server will open an OAuth flow and save a token. To persist the token across container restarts, mount the credentials directory:
 
 ```bash
-docker run -it --rm -p 8501:8501 \
+docker run -it --rm \
+  -p 8501:8501 \
+  -p 6274:6274 -p 3000:3000 \
+  -p 8001:8001 -p 8002:8002 \
   -v "$PWD":/workspace \
+  -v "$PWD/.memory":/memory \
   -v "$HOME/.gmail-mcp":/root/.gmail-mcp \
-  agentic_engineer_2
+  agentic_engineer_3
 ```
 
 **What it enables:** Claude Code prompts can read, search, and send Gmail messages on behalf of the authenticated user.
@@ -189,7 +239,7 @@ EOF
 Then rebuild the image so the file is copied into `/root/.claude/skills/`:
 
 ```bash
-docker build -t agentic_engineer_2 .
+docker build -t agentic_engineer_3 .
 ```
 
 **Adding a skill at runtime (no rebuild required):**
@@ -273,7 +323,7 @@ Your agent prompt goes here.
 2. Rebuild the image:
 
 ```bash
-docker build -t agentic_engineer_2 .
+docker build -t agentic_engineer_3 .
 ```
 
 **Adding an agent at runtime (no rebuild required):**
@@ -381,16 +431,20 @@ Both tags must be pushed separately. The `latest` tag is what students get by de
 
 ### Step 3 — Verify the image is public
 
-Visit `https://hub.docker.com/r/heatonresearch/agentic_engineer_2` and confirm the repository visibility is set to **Public** so students can pull without logging in.
+Visit `https://hub.docker.com/r/heatonresearch/agentic_engineer_3` and confirm the repository visibility is set to **Public** so students can pull without logging in.
 
 ### Pulling the image (students)
 
 Once published, students can run the image directly without cloning the repo or building anything:
 
 ```bash
-docker run -it --rm -p 8501:8501 -p 8502:8502 \
+docker run -it --rm \
+  -p 8501:8501 -p 8502:8502 \
+  -p 6274:6274 -p 3000:3000 \
+  -p 8001:8001 -p 8002:8002 \
   -e SLACK_BOT_TOKEN=xoxb-your-token \
   -e SLACK_TEAM_ID=T0123456 \
   -v "$PWD":/workspace \
-  heatonresearch/agentic_engineer_2:latest
+  -v "$PWD/.memory":/memory \
+  heatonresearch/agentic_engineer_3:latest
 ```

@@ -24,6 +24,7 @@ docker run -it --rm -p 8501:8501 -p 8502:8502 \
   -e SLACK_BOT_TOKEN=your-token \
   -e SLACK_TEAM_ID=your-team-id \
   -v "$PWD":/workspace \
+  -v "$PWD/.memory":/memory \
   agentic_engineer_3
 ```
 

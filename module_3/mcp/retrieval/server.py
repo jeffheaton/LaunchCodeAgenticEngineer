@@ -10,6 +10,8 @@ from typing import Callable
 import sqlite_vec
 from fastmcp import FastMCP
 from sentence_transformers import SentenceTransformer
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 
 REFERENCE_DIR = os.getenv("RETRIEVAL_REFERENCE_DIR", "/memory/reference")
 EMBEDDING_MODEL = os.getenv("RETRIEVAL_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
@@ -234,8 +236,8 @@ def keyword_search(
         "SELECT c.source_document, c.chunk_index, c.project, c.classification, "
         "c.doc_type, c.excerpt "
         "FROM fts_chunks f JOIN chunks c ON c.chunk_id = f.rowid "
-        "WHERE fts_chunks MATCH ? ORDER BY bm25(fts_chunks)",
-        (query_expr,),
+        "WHERE fts_chunks MATCH ? AND c.project = ? ORDER BY bm25(fts_chunks)",
+        (query_expr, project_id),
     ).fetchall()
 
     results: list[dict] = []
@@ -303,20 +305,23 @@ def retrieve(
             continue
         if "doc_type" in filters and row["doc_type"] != filters["doc_type"]:
             continue
+        score = round(1.0 - float(row["distance"]), 3)
+        if score < SIMILARITY_THRESHOLD:
+            continue
         results.append(
             {
                 "source_document": row["source_document"],
                 "chunk_index": row["chunk_index"],
                 "excerpt": row["excerpt"],
                 "classification": row["classification"],
-                "similarity_score": round(1.0 - float(row["distance"]), 3),
+                "similarity_score": score,
                 "retrieval_method": "vector",
             }
         )
         if len(results) == top_k:
             break
 
-    if results and results[0]["similarity_score"] >= SIMILARITY_THRESHOLD:
+    if results:
         return results
 
     return keyword_search(query, project_id, top_k, ceiling_rank, filters)
@@ -345,4 +350,12 @@ if __name__ == "__main__":
         chunker = chunk_paragraphs
 
     build_index(conn, chunker)
-    mcp.run(transport="http", host=args.host, port=args.port)
+
+    import uvicorn
+    app = mcp.http_app(
+        stateless_http=True,
+        middleware=[
+            Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+        ],
+    )
+    uvicorn.run(app, host=args.host, port=args.port)
